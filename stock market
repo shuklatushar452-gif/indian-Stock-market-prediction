@@ -1,0 +1,85 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.preprocessing import  MinMaxScaler
+from sklearn.linear_model import LinearRegression
+
+
+try :
+
+    df = pd.read_csv("NIFTY IT.csv")
+
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['year'] = df['Date'].dt.year
+    df['month'] = df['Date'].dt.month
+    df['day'] = df['Date'].dt.day  
+
+    open_scaler = MinMaxScaler()
+    date_scaler = MinMaxScaler()
+    price_scaler = MinMaxScaler()
+    
+
+    df['open_scaled'] = open_scaler.fit_transform(df[['Open']])
+    df['date_scaled'] = date_scaler.fit_transform(df[['year']])
+    df['price_scaled'] = price_scaler.fit_transform(df[['Price']])
+
+    X = df[['date_scaled','open_scaled']]
+    Y = df['price_scaled']
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=50)
+
+
+    model =  LinearRegression()
+    model.fit(X_train, Y_train)
+
+   
+
+    pred= model.predict(X_test)
+
+    print("r2_score:")
+    print(r2_score(Y_test, pred))
+
+    def predict_price (date_str, open_value):
+
+        date = pd.to_datetime(date_str)
+       
+        year = date.year      
+        dat = date_scaler.transform([[year]])[0][0]
+        opn = open_scaler.transform([[open_value]])[0][0]
+        enc_price = model.predict([[dat, opn]])[0]
+
+        pric = price_scaler.inverse_transform([[enc_price]])[0][0]
+        
+        
+        return pric
+    
+
+    
+    print("Predicted price:",predict_price("2025-12-10",500))
+
+   
+
+
+except Exception as e:
+    print("Error:",e)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
